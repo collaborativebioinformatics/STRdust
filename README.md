@@ -6,7 +6,7 @@ Anneri Lötter, Susanne P. Pfeifer - Writers
 
 Luis Paulin
 
-Damaris
+Damaris Lattimer
 
 Deepak Choubey
 
