@@ -1,4 +1,4 @@
-# STRdust
+![alt text](https://raw.githubusercontent.com/collaborativebioinformatics/STRdust/main/STRdust-logo.jpg)
 
 ## Contributors
 
@@ -12,7 +12,7 @@ Deepak Choubey
 
 Guangyi Chen
 
-Kyuil Cho - Sysadm
+Kyuil Cho - Sysadmin
 
 Kimberley Billingsley
 
@@ -25,9 +25,11 @@ Wouter De Coster - Team Lead
 Yilei Fu
 
 ## Goals
-
+* To develop a tool to detect and genotype (in terms of length) STR in long reads (_de novo_) without the need of genome annotation beforehand
+* This tool should be applicable in mammals and plants (basically any phased eukaryotic assembly)
 
 ## Introduction/Description
+This tools makes use of phased read alignments to find and genotype STR.
 
 ## How does it work?
 
