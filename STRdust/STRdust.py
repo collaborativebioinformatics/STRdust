@@ -29,13 +29,13 @@ class Insertion(object):
 
 def main():
     args = get_args()
-    insertions = extract_insertions(args.bam, minlen=15, mapq=10)
+    insertions = extract_insertions(args.bam, minlen=15, mapq=10, merge_distance=50)
     # Group those insertions that are at approximately the same location and the same haplotype
     # Create a consensus out of those by simple counting or local assembly
     # Assess if an insertion is repetitive (mreps?) and extract the unit motif
 
 
-def extract_insertions(bamf, minlen, mapq):
+def extract_insertions(bamf, minlen, mapq, merge_distance):
     """
     Extract insertions and softclips from a bam file based on parsing CIGAR strings
 
@@ -81,10 +81,9 @@ def extract_insertions(bamf, minlen, mapq):
                         )
                     read_position += length
 
-        if len(insertions_per_read) != 0:
-            insertions_per_read.sort()
-            # TODO Merging of inserts that are close together on the same read
-            insertions.extend(insertions_per_read)
+        if len(insertions_per_read) > 1:
+            insertions_per_read = horizontal_merge(insertions_per_read, merge_distance)
+        insertions.extend(insertions_per_read)
     return insertions
 
 
@@ -92,6 +91,35 @@ def get_haplotype(read):
     """Return the haplotype to which the read is assigned
     Or 'un' for reads that are unphased"""
     return read.get_tag('HP') if read.has_tag('HP') else 'un'
+
+
+def horizontal_merge(insertions, merge_distance):
+    """Merge insertions occuring in the same read if they are within merge_distance"""
+    insertions.sort()
+    while True:
+        distances = [insertions[n]-insertions[n-1] for n in range(1, len(insertions))]
+        distance_below_cutoff = [d < merge_distance for d in distances]
+        if any(distance_below_cutoff):
+            new_ins = []
+            skip = False
+            for i, m in enumerate(distance_below_cutoff):
+                if skip:
+                    skip = False
+                    continue
+                if m:
+                    new_ins.append(Insertion(
+                        chrom=insertions[i].chrom,
+                        start=(insertions[i].start + insertions[i+1].start) / 2,
+                        length=insertions[i].length + insertions[i+1].length,
+                        haplotype=insertions[i].haplotype,
+                        seq=insertions[i].seq + insertions[i+1].seq,
+                    ))
+                    skip = True  # skip next insertion because we merged that one in the current
+                else:
+                    new_ins.append(insertions[i])
+            insertions = new_ins
+        else:
+            return insertions
 
 
 def get_args():
