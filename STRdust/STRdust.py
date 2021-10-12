@@ -21,8 +21,9 @@ class Insertion(object):
     def __eq__(self, other, distance=15):
         """
         Class method used for comparing 2 inserts (with some wobble distance)
+        Assuming self < other
         """
-        condition = [self.chrom == other.chrom, self.ref_coords[0] + distance > other.ref_coords[0]]
+        condition = [self.chrom == other.chrom, self.start + distance > other.start]
         return all(condition)
 
 
