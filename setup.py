@@ -31,7 +31,7 @@ setup(
     keywords='STR long reads',
     packages=find_packages(),
     python_requires='>=3',
-    install_requires=['pysam', 'spoa'],
+    install_requires=['pysam', 'pyspoa'],
     package_data={'STRdust': []},
     package_dir={'STRdust': 'STRdust'},
     include_package_data=True,
