@@ -2,27 +2,16 @@
 
 ## Contributors
 
-Anneri Lötter, Susanne P. Pfeifer - Writers
-
-Luis Paulin
-
-Damaris Lattimer
-
-Deepak Choubey
-
-Guangyi Chen
-
-Kyuil Cho - Sysadmin
-
-Kimberley Billingsley
-
-Pavel Avdeyev
-
-Simone Cree
-
-Wouter De Coster - Team Lead
-
-Yilei Fu
+  Anneri Lötter, Guangyi Chen and Susanne P. Pfeifer - Writers  
+  Luis Paulin - coding  
+  Damaris Lattimer - coding  
+  Deepak Choubey  
+  Kyuil Cho - Sysadmin  
+  Kimberley Billingsley  
+  Pavel Avdeyev - coding, dataset generation  
+  Simone Cree  
+  Wouter De Coster - Team Lead  
+  Yilei Fu  
 
 ## Goals
 * To develop a tool to detect and genotype (in terms of length) STR in long reads (_de novo_) without the need of genome annotation beforehand
