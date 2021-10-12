@@ -3,12 +3,12 @@ import pysam
 
 
 class Insertion(object):
-    def __init__(self, chrom, start, length, seq, type):
+    def __init__(self, chrom, start, length, haplotype, seq):
         self.chrom = chrom
         self.start = start
         self.end = start + length
+        self.haplotype = haplotype
         self.seq = seq
-        self.type = type
 
     def __lt__(self, other):
         """
@@ -77,8 +77,7 @@ def extract_insertions(bamf, minlen, mapq):
                                       start=reference_position,
                                       length=length,
                                       haplotype=get_haplotype(read),
-                                      seq=read.query_sequence[read_position:read_position + length],
-                                      type="SOFTCLIP" if operation == 4 else "INS")
+                                      seq=read.query_sequence[read_position:read_position + length])
                         )
                     read_position += length
 
