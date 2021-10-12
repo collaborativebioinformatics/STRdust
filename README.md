@@ -29,7 +29,7 @@ Yilei Fu
 * This tool should be applicable in mammals and plants (basically any phased eukaryotic assembly)
 
 ## Introduction/Description
-This tools makes use of phased read alignments to find and genotype STR.
+Short tandem repeats are motifs of multiple nucleotides that are repeated. Long-read sequencing can be used to identify their length more accurately than short reads as reads can span across the entire repeat region. This tools makes use of phased read alignments to find and genotype STR.
 
 ## How does it work?
 
