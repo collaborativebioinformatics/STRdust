@@ -9,6 +9,8 @@ class Insertion(object):
         self.end = start + length
         self.haplotype = haplotype
         self.seq = seq
+        self.merged = False
+        self.count = 1
 
     def __lt__(self, other):
         """
@@ -128,6 +130,40 @@ def horizontal_merge(insertions, merge_distance):
             insertions = new_ins
         else:
             return insertions
+
+
+def merge_overlapping_insertions(insertions, merge_distance):
+    merged_insertions = []
+    for index, insertion in enumerate(insertions):
+        to_merge = [insertion]
+        if insertion.merged:
+            continue
+        for candidate_merge in insertions[index+1:]:
+            if insertion.is_overlapping(candidate_merge, distance=merge_distance):
+                to_merge.append(candidate_merge)
+            else:
+                break
+        merged_insertions.append(create_consensus(to_merge))
+
+
+def create_consensus(insertions_to_merge):
+    if len(insertions_to_merge) == 1:
+        return insertions_to_merge[0]
+    else:
+        count = len(insertions_to_merge)
+        consensus_seq = assemble([i.seq for i in insertions_to_merge])
+        merged = Insertion(
+            chrom=insertions_to_merge[0].chrom,
+            start=sum([i.start for i in insertions_to_merge]) / count,
+            length=len(consensus_seq),
+            haplotype=insertions_to_merge[0].haplotype,
+            seq=consensus_seq)
+        merged.count = count
+        return merged
+
+
+def assemble(seqs):
+    pass
 
 
 def get_args():
