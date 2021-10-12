@@ -12,18 +12,22 @@ class Insertion(object):
 
     def __lt__(self, other):
         """
-        Class method for sorting our inserts based on chromosome and reference coordinate
-        return a list with inserts from lowest chromosome number to highest,
+        Class method for sorting our inserts based on haplotype, chromosome and reference coordinate
+        return a list with inserts from lowest haplotype, then chromosome number to highest,
         and then sorted based on reference coordinate
         """
-        return self.chrom < other.chrom or (self.chrom == other.chrom and self.start < other.start)
+        return (self.haplotype < other.haplotype) \
+            or (self.chrom < other.chrom) \
+            or (self.chrom == other.chrom and self.start < other.start)
 
-    def __eq__(self, other, distance=15):
+    def is_overlapping(self, other, distance=15):
         """
         Class method used for comparing 2 inserts (with some wobble distance)
-        Assuming self < other
+        Assuming sorted input with self < other
         """
-        condition = [self.chrom == other.chrom, self.start + distance > other.start]
+        condition = [self.haplotype == other.haplotype,
+                     self.chrom == other.chrom,
+                     self.start + distance > other.start]
         return all(condition)
 
 
