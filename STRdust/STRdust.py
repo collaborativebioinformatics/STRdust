@@ -34,7 +34,9 @@ class Insertion(object):
 def main():
     args = get_args()
     for chrom in pysam.AlignmentFile(args.bam, "rb").references:
-        insertions = extract_insertions(args.bam, chrom, minlen=15, mapq=10, merge_distance=50)
+        insertions = extract_insertions(args.bam, chrom, minlen=15,
+                                        mapq=10, merge_distance=args.distance)
+        insertions = merge_overlapping_insertions(sorted(insertions), merge_distance=args.distance)
         # Group those insertions that are at approximately the same location and the same haplotype
         # Create a consensus out of those by simple counting or local assembly
         # Assess if an insertion is repetitive (mreps?) and extract the unit motif
@@ -131,6 +133,10 @@ def horizontal_merge(insertions, merge_distance):
 def get_args():
     parser = ArgumentParser("Genotype STRs from long reads")
     parser.add_argument("bam", help="phased bam file")
+    parser.add_argument("-d", "--distance",
+                        help="distance across which two events should be merged",
+                        type=int,
+                        default=50)
     return parser.parse_args()
 
 
