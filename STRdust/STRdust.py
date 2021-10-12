@@ -29,13 +29,14 @@ class Insertion(object):
 
 def main():
     args = get_args()
-    insertions = extract_insertions(args.bam, minlen=15, mapq=10, merge_distance=50)
-    # Group those insertions that are at approximately the same location and the same haplotype
-    # Create a consensus out of those by simple counting or local assembly
-    # Assess if an insertion is repetitive (mreps?) and extract the unit motif
+    for chrom in pysam.AlignmentFile(args.bam, "rb").references:
+        insertions = extract_insertions(args.bam, chrom, minlen=15, mapq=10, merge_distance=50)
+        # Group those insertions that are at approximately the same location and the same haplotype
+        # Create a consensus out of those by simple counting or local assembly
+        # Assess if an insertion is repetitive (mreps?) and extract the unit motif
 
 
-def extract_insertions(bamf, minlen, mapq, merge_distance):
+def extract_insertions(bamf, chrom, minlen, mapq, merge_distance):
     """
     Extract insertions and softclips from a bam file based on parsing CIGAR strings
 
@@ -56,7 +57,7 @@ def extract_insertions(bamf, minlen, mapq, merge_distance):
     """
     insertions = []
     bam = pysam.AlignmentFile(bamf, "rb")
-    for read in bam.fetch():
+    for read in bam.fetch(contig=chrom, multiple_iterators=True):
         insertions_per_read = []
         read_position = 0
         reference_position = read.reference_start + 1
