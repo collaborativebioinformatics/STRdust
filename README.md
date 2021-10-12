@@ -39,7 +39,10 @@ Short tandem repeats are motifs of multiple nucleotides that are repeated. Long-
 
 ## Quickstart
 
-### Input
+### Input  
+  * Phased reference genome  
+  * fastq files of long-read sequencing run  
+
 
 ### Output
 
