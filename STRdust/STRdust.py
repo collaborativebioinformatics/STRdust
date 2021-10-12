@@ -93,6 +93,7 @@ def get_haplotype(read):
     return read.get_tag('HP') if read.has_tag('HP') else 'un'
 
 
+# PLEASE REVIEW FUNCTION BELOW
 def horizontal_merge(insertions, merge_distance):
     """Merge insertions occuring in the same read if they are within merge_distance"""
     insertions.sort()
