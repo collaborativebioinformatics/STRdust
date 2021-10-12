@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 import pysam
+from spoa import poa
 
 
 class Insertion(object):
@@ -74,12 +75,9 @@ def extract_insertions(bamf, chrom, minlen, mapq, merge_distance):
                 if operation in [0, 7, 8]:
                     read_position += length
                     reference_position += length
-
                 elif operation in [2, 3]:
                     reference_position += length
-
                 elif operation in [1, 4]:
-
                     if length >= minlen:
                         insertions_per_read.append(
                             Insertion(chrom=read.reference_name,
@@ -162,8 +160,10 @@ def create_consensus(insertions_to_merge):
         return merged
 
 
+# REVIEW PARAMETERS
 def assemble(seqs):
-    pass
+    consensus, _ = poa(seqs, algorithm=1, m=2, n=-4, g=-4, e=-2, q=-24, c=-1)
+    return consensus
 
 
 def get_args():
