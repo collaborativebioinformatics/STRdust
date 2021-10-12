@@ -8,6 +8,7 @@ class Insertion(object):
         self.chrom = chrom
         self.start = start
         self.end = start + length
+        self.length = length
         self.haplotype = haplotype
         self.seq = seq
         self.merged = False
@@ -97,7 +98,7 @@ def extract_insertions(bamf, chrom, minlen, mapq, merge_distance):
 def get_haplotype(read):
     """Return the haplotype to which the read is assigned
     Or 'un' for reads that are unphased"""
-    return read.get_tag('HP') if read.has_tag('HP') else 'un'
+    return str(read.get_tag('HP')) if read.has_tag('HP') else 'un'
 
 
 # PLEASE REVIEW FUNCTION BELOW
@@ -105,7 +106,7 @@ def horizontal_merge(insertions, merge_distance):
     """Merge insertions occuring in the same read if they are within merge_distance"""
     insertions.sort()
     while True:
-        distances = [insertions[n]-insertions[n-1] for n in range(1, len(insertions))]
+        distances = [insertions[n].start-insertions[n-1].start for n in range(1, len(insertions))]
         distance_below_cutoff = [d < merge_distance for d in distances]
         if any(distance_below_cutoff):
             new_ins = []
