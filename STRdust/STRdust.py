@@ -31,13 +31,17 @@ def main():
     insertions = extract_insertions(args.bam, minlen=15, mapq=10)
     # Group those insertions that are at approximately the same location and the same haplotype
     # Create a consensus out of those by simple counting or local assembly
+    # Assess if an insertion is repetitive (mreps?) and extract the unit motif
 
 
 def extract_insertions(bamf, minlen, mapq):
     """
     Extract insertions and softclips from a bam file based on parsing CIGAR strings
 
-    Depending on operation, read/reference position is changed:
+    Depending on the CIGAR operation, the 'cursor' is moved forward in either the read coordinates,
+    the reference coordinates or both ('consumes query' vs 'consumes reference').
+    See also https://samtools.github.io/hts-specs/SAMv1.pdf, page8 [on 20211012], CIGAR
+
     BAM_CMATCH  0
     BAM_CINS    1
     BAM_CDEL    2
@@ -73,12 +77,13 @@ def extract_insertions(bamf, minlen, mapq):
                                       length=length,
                                       haplotype=get_haplotype(read),
                                       seq=read.query_sequence[read_position:read_position + length],
-                                      type="SOFTCLIP" if operation == 4 else "INS"))
+                                      type="SOFTCLIP" if operation == 4 else "INS")
+                        )
                     read_position += length
 
         if len(insertions_per_read) != 0:
             insertions_per_read.sort()
-            # TODO Merging of inserts that are on the same read and are close enough to be called as the same insert
+            # TODO Merging of inserts that are close together on the same read
             insertions.extend(insertions_per_read)
     return insertions
 
