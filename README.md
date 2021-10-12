@@ -44,7 +44,8 @@ Short tandem repeats are motifs of multiple nucleotides that are repeated. Long-
   * fastq files of long-read sequencing run  
 
 
-### Output
+### Output  
+  * vcf file with STR genotype calls  
 
 ## Testing
 
