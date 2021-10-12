@@ -98,7 +98,7 @@ def extract_insertions(bamf, chrom, minlen, mapq, merge_distance):
 def get_haplotype(read):
     """Return the haplotype to which the read is assigned
     Or 'un' for reads that are unphased"""
-    return read.get_tag('HP') if read.has_tag('HP') else 'un'
+    return str(read.get_tag('HP')) if str(read.has_tag('HP')) else 'un'
 
 
 # PLEASE REVIEW FUNCTION BELOW
