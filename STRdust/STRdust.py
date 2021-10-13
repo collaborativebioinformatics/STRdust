@@ -136,20 +136,35 @@ def main():
         os.mkdir(vcf_dir)
 
     dust = {}
-    for chrom in pysam.AlignmentFile(args.bam, "rb").references:
-        logging.info(f"-- Start processing chromosome: {chrom} --")
-
-        insertions = extract_insertions(args.bam, chrom, minlen=15,
+    if args.region:
+        insertions = extract_insertions(args.bam, args.region, minlen=15,
                                         mapq=10, merge_distance=args.distance, flank_distance=50)
         insertions = merge_overlapping_insertions(sorted(insertions), merge_distance=args.distance)
 
-        ins_chr_file = os.path.join(ins_dir, f"ins_{chrom}.fa")
+        ins_chr_file = os.path.join(ins_dir, "ins_region.fa")
         write_ins_file(insertions, ins_chr_file)
 
         mreps_dict = parse_mreps_result(run_mreps(ins_chr_file, args.mreps_res))
         dust.update(mreps_dict)
         if not args.save_temp:
             os.remove(ins_chr_file)
+    else:
+        for chrom in pysam.AlignmentFile(args.bam, "rb").references:
+            logging.info(f"-- Start processing chromosome: {chrom} --")
+
+            insertions = extract_insertions(args.bam, chrom, minlen=15,
+                                            mapq=10, merge_distance=args.distance,
+                                            flank_distance=50)
+            insertions = merge_overlapping_insertions(
+                sorted(insertions), merge_distance=args.distance)
+
+            ins_chr_file = os.path.join(ins_dir, f"ins_{chrom}.fa")
+            write_ins_file(insertions, ins_chr_file)
+
+            mreps_dict = parse_mreps_result(run_mreps(ins_chr_file, args.mreps_res))
+            dust.update(mreps_dict)
+            if not args.save_temp:
+                os.remove(ins_chr_file)
 
     # TODO merge vcf files geneated for each chromosome (usefull for parallel implementation)
 
@@ -189,7 +204,7 @@ def extract_insertions(bamf, chrom, minlen, mapq, merge_distance, flank_distance
 
     insertions = []
     bam = pysam.AlignmentFile(bamf, "rb")
-    for read in bam.fetch(contig=chrom, multiple_iterators=True):
+    for read in bam.fetch(region=chrom, multiple_iterators=True):
         insertions_per_read = []
         read_position = 0
         reference_position = read.reference_start + 1
@@ -357,8 +372,11 @@ def parse_mreps_result(mreps_output_str):
             output_list = output_str.split('\n')
             ins_loc = output_list[0]
             temp = []
-            all_repeat_info = [list(g) for k, g in groupby(
-                output_list, key=lambda x: x != mreps_split_str) if k][1]
+            try:
+                all_repeat_info = [list(g) for k, g in groupby(
+                    output_list, key=lambda x: x != mreps_split_str) if k][1]
+            except IndexError:
+                sys.exit(output_list)
             for info in all_repeat_info:
                 info_list = info.split("\t")
                 loc_list = re.findall(r'\d+', info_list[0])
@@ -412,7 +430,7 @@ def get_args():
     parser = ArgumentParser("Genotype STRs from long reads")
     parser.add_argument("bam", help="phased bam file")
     parser.add_argument("-o", "--out_dir", help="output directory",
-                        type=str, default=os. getcwd())
+                        type=str, default=os.getcwd())
     parser.add_argument("-d", "--distance",
                         help="distance across which two events should be merged",
                         type=int,
@@ -427,6 +445,7 @@ def get_args():
     parser.add_argument("--debug", action="store_true",
                         dest="debug", default=False,
                         help="enable debug output")
+    parser.add_argument("--region", help="run on a specific interval only")
 
     return parser.parse_args()
 
