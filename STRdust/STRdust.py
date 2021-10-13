@@ -1,8 +1,10 @@
 from argparse import ArgumentParser
 
 from concurrent.futures import ProcessPoolExecutor
-import pysam, re, subprocess, logging
-# from Bio import SeqIO
+import pysam
+import re
+import subprocess
+import logging
 
 from spoa import poa
 from itertools import groupby
@@ -190,7 +192,8 @@ def merge_overlapping_insertions(insertions, merge_distance):
     for i in range(len(insertions)):
         to_merge.append(insertions[i])
 
-        if (i == len(insertions) - 1) or (not insertions[i].is_overlapping(insertions[i + 1], distance=merge_distance)):
+        if (i == len(insertions) - 1) \
+                or (not insertions[i].is_overlapping(insertions[i + 1], distance=merge_distance)):
             # logging.info(f"{i} {len(to_merge)}")
             cons_ins = create_consensus(to_merge)
 
@@ -236,6 +239,7 @@ def assemble(seqs):
     consensus, _ = poa(seqs, algorithm=1, m=2, n=-4, g=-4, e=-2, q=-24, c=-1)
     return consensus
 
+
 def get_merged_ins_file(insertions, file_name):
     """
     Output an fasta file contains all insertions for mreps
@@ -244,9 +248,12 @@ def get_merged_ins_file(insertions, file_name):
         for i in insertions:
             ins_file.writelines(f">{i.chrom}_{int(i.start)}_{int(i.end)}\n{i.seq}\n")
 
+
 def run_mreps(file_name, mreps_res):
-    mreps_result = subprocess.run(["mreps", "-fasta", "-res", str(mreps_res), file_name], capture_output=True)
+    mreps_result = subprocess.run(
+        ["mreps", "-fasta", "-res", str(mreps_res), file_name], capture_output=True)
     return(mreps_result.stdout.decode("utf-8"))
+
 
 def parse_mreps_result(mreps_output_str):
     """
@@ -258,26 +265,28 @@ def parse_mreps_result(mreps_output_str):
         end is the end position of the repeat
         string is the repeat string
     """
-    mreps_split_str = ' ---------------------------------------------------------------------------------------------'
+    mreps_split_str = ' ' + '-'*93
 
     result_dict = {}
     mreps_output_str = re.split("Processing sequence", mreps_output_str)[1:]
-    for output_str in  mreps_output_str:
+    for output_str in mreps_output_str:
         if "RESULTS: There are no repeats in the processed sequence" in output_str:
             continue
         else:
             output_list = output_str.split('\n')
             ins_loc = output_list[0]
             temp = []
-            all_repeat_info = [list(g) for k, g in groupby(output_list, key=lambda x: x != mreps_split_str) if k][1]
+            all_repeat_info = [list(g) for k, g in groupby(
+                output_list, key=lambda x: x != mreps_split_str) if k][1]
             for info in all_repeat_info:
                 info_list = info.split("\t")
                 loc_list = re.findall(r'\d+', info_list[0])
                 seq = info_list[-1].split()[0]
                 ins_info = loc_list + [seq]
                 temp.append(ins_info)
-            result_dict.update({ins_loc:temp})
+            result_dict.update({ins_loc: temp})
     return result_dict
+
 
 def vcfy(mrep_dict, oufvcf):
     """
@@ -304,14 +313,24 @@ def vcfy(mrep_dict, oufvcf):
                 end_mrep = int(end_mrep)
                 # skip homopolymers
                 if len(seq) > 1:
-                    strdust_vcf.write("%s\t%s\t%s\t%s\t%s\n" % (chrom, str(start_mrep+start_ins), str(end_mrep+start_ins), seq, str(end_mrep-start_mrep)))
+                    strdust_vcf.write(
+                        "%s\t%s\t%s\t%s\t%s\n" % (chrom,
+                                                  str(start_mrep+start_ins),
+                                                  str(end_mrep+start_ins),
+                                                  seq,
+                                                  str(end_mrep-start_mrep)))
         else:
             [[start_mrep, end_mrep, seq]] = mrep_dict[dustspec]
             start_mrep = int(start_mrep)
             end_mrep = int(end_mrep)
             # skip homopolymers
             if len(seq) > 1:
-                strdust_vcf.write("%s\t%s\t%s\t%s\t%s\n" % (chrom, str(start_mrep+start_ins), str(end_mrep+start_ins), seq, str(end_mrep-start_mrep)))
+                strdust_vcf.write(
+                    "%s\t%s\t%s\t%s\t%s\n" % (chrom,
+                                              str(start_mrep+start_ins),
+                                              str(end_mrep+start_ins),
+                                              seq,
+                                              str(end_mrep-start_mrep)))
 
     strdust_vcf.close()
 
