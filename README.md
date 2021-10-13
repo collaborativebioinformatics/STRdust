@@ -48,6 +48,16 @@ optional arguments:
 ### Output  
   * vcf file with STR genotype calls  
 
+| #chrom | start | end | repeat_seq | size |
+| --------- | :-------: | :-----: | :------------: | -------: |
+| 22 | 10521893 |	10521909 |	GCA |	16 |
+| 22 |  10522628 |	10522647 |	AATA |	19 |
+| 22 |	10534566 |	10534586 |	GTTTT |	20 |
+| 22 |	10511934 |	10511957 |	AG |	23 |
+| 22 |	10516550 |	10516595 |	TA |	45 |
+| 22 |	10516550 |	10516572 |	TATATATG |	22 |
+
+
 ## Testing  
 This tool was tested using simulated reads for human chromosome 22 and tomato chromosome 1. Long reads were simulated from the GRCh38 (human) and SL4.0 (tomato) reference genome assemblies by first simulating two haplotypes for STRs and furtherthermore with SNPs. The simulated reads were then used to create a phased bam that was used as input for STRdust.   
 
