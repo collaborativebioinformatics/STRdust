@@ -101,6 +101,13 @@ python STRdust/STRDust.py test_data/subsampled.bam -o test_results
 
 
 ## Testing  
+### Simulation-strategy
+This tool was tested using simulated reads for human chromosome 22 and tomato chromosome 1. 
+
+### STRsimulator
+We made use of STRsimulator (https://github.com/DamarisLa/STRsimulator), which manipulates a reference file (genome, chromosome) in order to simulate STR.
+The simulator takes a haploid file as reference(.fasta) and a region file (.bed) containing information about known STR-regions as input. All of the supplied regions can be, expanded and mutated. The output result is a fasta file with the modified STRs, and can be haploid or diploid (homozygosity can be user defined).
+
 This tool was tested using simulated reads for human chromosome 22 and tomato chromosome 1. Long reads were simulated using SimiSTR for the GRCh38 (human) and SL4.0 (tomato) reference genome assemblies. The simulator takes a haploid file as reference (.fasta) and a region file (.bed) containing information about known STR-regions as input. All of the supplied regions can be modified in  
 ```
 expansion (% of regions that will randomly be positive or negative expanded [0.00-1.00]),
@@ -110,9 +117,11 @@ haploid [h] or
 diploid [d]. If diploid is chosen,
     the percentage of regions that should get homozygous can be set [0.00-1.00].
 ```
+The simulator works on assembled genomes, as well as on only one or more assembled chromosomes, if the bed-file contains such entrances likewise (anything else could run error-free, but will not manipulate anything, as manipulations only occur in the known regions). The simulated reads were then used to create a phased bam that was used as input for STRdust.   
 
-The simulator works on assembled genomes, as well as on only one or more assembled chromosomes, if the bed-file contains such entrances likewise (anything else could run errorfree, but will not manipulate anything, as manipulations only occur in the known regions). The simulated reads were then used to create a phased bam that was used as input for STRdust.   
+### Simulation strategy
+STRsimulator was used to modify the GRCh38 (human) and SL4.0 (tomato) reference genome assemblies. Then, additional variation (SNVs) were introduced with SURVIVOR (https://github.com/fritzsedlazeck/SURVIVOR/) at a rate of 0.001. 
+Long reads were simulated using SURVIVOR for the GRCh38 (human) and SL4.0 (tomato) STR-modified genomes. Mapping was performed with minimap2 (https://github.com/lh3/minimap2) two-fold (with and without the `-Y` parameter), and phasing was done with longshot (https://github.com/pjedge/longshot). Default parameters were used for all tools, if not otherwise mentioned.
 
-
-
- 
+### Tested software
+We compared STRdust to straglr (https://github.com/bcgsc/straglr) and TRiCoLOR (https://github.com/davidebolo1993/TRiCoLOR). Both tools used as input the phased alignment, and were used with default parameters.
