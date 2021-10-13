@@ -84,8 +84,7 @@ def main():
         insertions = merge_overlapping_insertions(sorted(insertions), merge_distance=args.distance)
         get_merged_ins_file(insertions, args.ins_file)
         mreps_dict = parse_mreps_result(run_mreps(args.ins_file, args.mreps_res))
-        for key in mreps_dict.keys():
-            dust[key] = mreps_dict[key]
+        dust.update(mreps_dict)
 
     vcfy(dust, args.outfile)
 
