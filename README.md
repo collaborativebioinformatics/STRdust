@@ -43,6 +43,14 @@ Installation using pip
 
 `pip install setup.py` 
 
+
+## Third-party 
+
+STRdust includes some third-party software:
+* [SPOA](https://github.com/rvaser/spoa)
+* [mreps](http://mreps.univ-mlv.fr/)
+* [samtools](https://https://github.com/samtools/samtools)
+
 ## How to use?  
 To run:  
 `python STRdust/STRdust.py path_to_bamfile`  
