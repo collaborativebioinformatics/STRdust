@@ -1,13 +1,13 @@
 ![alt text](https://raw.githubusercontent.com/collaborativebioinformatics/STRdust/main/STRdust-logo.jpg)  
 
 ## Contributors  
-  Anneri Lötter, Guangyi Chen and Susanne P. Pfeifer - Writers  
+  Anneri Lötter, Guangyi Chen and Susanne P. Pfeifer - writers  
   Luis Paulin - coding  
   Damaris Lattimer - coding  
-  Kyuil Cho - Sysadmin, coding   
-  Pavel Avdeyev - coding, dataset generation  
-  Wouter De Coster - Team Lead, coding  
-  Yilei Fu - coding  
+  Kyuil Cho - sys. admin, coding   
+  Yilei Fu - coding   
+  Pavel Avdeyev - coding   
+  Wouter De Coster - Team Lead     
 
 ## Goals
 * To develop a tool to detect and genotype (in terms of length) STR in long reads (_de novo_) without the need of genome annotation beforehand
@@ -39,6 +39,10 @@ Installation using a conda environment
 5. Dry run  
 `python STRdust/STRdust.py -h`  
 
+Installation using pip
+
+`pip install setup.py` 
+
 ## How to use?  
 To run:  
 `python STRdust/STRdust.py path_to_bamfile`  
@@ -66,6 +70,11 @@ optional arguments:
 ```
 
 ## Quickstart
+
+```
+cd STRdust
+python STRdust/STRDust.py test_data/subsampled.bam -o test_results 
+```
 
 ### Input  
   * Phased bam alignment file  
