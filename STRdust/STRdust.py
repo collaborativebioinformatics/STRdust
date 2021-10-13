@@ -185,11 +185,11 @@ def merge_overlapping_insertions(insertions, merge_distance):
     to_merge = []
 
     for i in range(len(insertions)):
-    to_merge.append(insertions[i])
+        to_merge.append(insertions[i])
 
-    if (i == len(insertions) - 1) or (not insertions[i].is_overlapping(insertions[i + 1], distance=merge_distance)):
-        merged_insertions.append(create_consensus(to_merge))
-        to_merge = []
+        if (i == len(insertions) - 1) or (not insertions[i].is_overlapping(insertions[i + 1], distance=merge_distance)):
+            merged_insertions.append(create_consensus(to_merge))
+            to_merge = []
 
     logging.info("End with merging overlapping insertions")
     return merged_insertions
