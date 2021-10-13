@@ -22,7 +22,7 @@ Short tandem repeats (STRs) are motifs of multiple nucleotides in length that ar
 Although tools have been developed to address the high error-rate problem, they still have limitations such as not being able to consider multiple STRs in a single reads. To adress these issues, we present _STRdust_, a tool to (_de novo_) detect and genotype STRs in long-read sequencing data without prior genome annotation that can be applied in mammals and plants.
 
 ## How does it work?  
-![alt text](https://raw.githubusercontent.com/collaborativebioinformatics/STR_Integration/main/Flow%20chart%20group2.jpg)
+![alt text](https://raw.githubusercontent.com/collaborativebioinformatics/STRdust/main/Strategy1.png)
 
 ## How to use?  
 To run:  
