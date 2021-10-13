@@ -10,7 +10,7 @@
   Pavel Avdeyev - coding, dataset generation  
   Simone Cree  
   Wouter De Coster - Team Lead  
-  Yilei Fu  
+  Yilei Fu - coding  
 
 ## Goals
 * To develop a tool to detect and genotype (in terms of length) STR in long reads (_de novo_) without the need of genome annotation beforehand
