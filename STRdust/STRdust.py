@@ -76,7 +76,7 @@ class Insertion(object):
         """
         return (self.haplotype < other.haplotype) \
             or (self.chrom < other.chrom) \
-            or (self.chrom == other.chrom and self.start < other.start)
+            or (self.haplotype == other.haplotype and self.chrom == other.chrom and self.start < other.start)
 
     def is_overlapping(self, other, distance=15):
         """
@@ -280,7 +280,7 @@ def merge_overlapping_insertions(insertions, merge_distance):
         to_merge.append(insertions[i])
 
         if (i == len(insertions) - 1) or (not insertions[i].is_overlapping(insertions[i + 1], distance=merge_distance)):
-            # logging.info(f"{i} {len(to_merge)}")
+            logging.debug(f"Merging {i} {len(to_merge)}")
             cons_ins = create_consensus(to_merge)
 
             if cons_ins is not None:
