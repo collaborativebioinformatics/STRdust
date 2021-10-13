@@ -43,6 +43,14 @@ Installation using pip
 
 `pip install setup.py` 
 
+
+## Third-party 
+
+STRdust includes some third-party software:
+* [SPOA](https://github.com/rvaser/spoa)
+* [mreps](http://mreps.univ-mlv.fr/)
+* [samtools](https://https://github.com/samtools/samtools)
+
 ## How to use?  
 To run:  
 `python STRdust/STRdust.py path_to_bamfile`  
@@ -93,12 +101,14 @@ python STRdust/STRDust.py test_data/subsampled.bam -o test_results
 
 
 ## Testing  
+### Simulation-strategy
 This tool was tested using simulated reads for human chromosome 22 and tomato chromosome 1. 
 
 ### STRsimulator
 We made use of STRsimulator (https://github.com/DamarisLa/STRsimulator), which manipulates a reference file (genome, chromosome) in order to simulate STR.
 The simulator takes a haploid file as reference(.fasta) and a region file (.bed) containing information about known STR-regions as input. All of the supplied regions can be, expanded and mutated. The output result is a fasta file with the modified STRs, and can be haploid or diploid (homozygosity can be user defined).
 
+This tool was tested using simulated reads for human chromosome 22 and tomato chromosome 1. Long reads were simulated using SimiSTR for the GRCh38 (human) and SL4.0 (tomato) reference genome assemblies. The simulator takes a haploid file as reference (.fasta) and a region file (.bed) containing information about known STR-regions as input. All of the supplied regions can be modified in  
 ```
 expansion (% of regions that will randomly be positive or negative expanded [0.00-1.00]),
 mutation (% chance for a base to be substituted [0.00-1.00]),
