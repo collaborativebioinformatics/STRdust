@@ -288,15 +288,15 @@ def vcfy(mrep_dict, oufvcf):
                 end_mrep = int(end_mrep)
                 # skip homopolymers
                 if len(seq) > 1:
-                    strdust_vcf.write("%s\t%s\t%s\t%s\t%s\n" % (chrom, str(start_mrep+start_ins), str(end_mrep+start_ins), seq, str(end_ins-start_ins)))
+                    strdust_vcf.write("%s\t%s\t%s\t%s\t%s\n" % (chrom, str(start_mrep+start_ins), str(end_mrep+start_ins), seq, str(end_mrep-start_mrep)))
         else:
             [[start_mrep, end_mrep, seq]] = mrep_dict[dustspec]
             start_mrep = int(start_mrep)
             end_mrep = int(end_mrep)
             # skip homopolymers
             if len(seq) > 1:
-                strdust_vcf.write("%s\t%s\t%s\t%s\t%s\n" % (chrom, str(start_mrep+start_ins), str(end_mrep+start_ins), seq, str(end_ins-start_ins)))
-                
+                strdust_vcf.write("%s\t%s\t%s\t%s\t%s\n" % (chrom, str(start_mrep+start_ins), str(end_mrep+start_ins), seq, str(end_mrep-start_mrep)))
+
     strdust_vcf.close()
 
 
