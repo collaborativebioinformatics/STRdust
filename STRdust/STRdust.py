@@ -10,7 +10,6 @@ import pysam
 import re
 import subprocess
 import logging
-# from Bio import SeqIO
 
 from spoa import poa
 from itertools import groupby
@@ -77,7 +76,7 @@ class Insertion(object):
         """
         return (self.haplotype < other.haplotype) \
             or (self.chrom < other.chrom) \
-            or (self.chrom == other.chrom and self.start < other.start)
+            or (self.haplotype == other.haplotype and self.chrom == other.chrom and self.start < other.start)
 
     def is_overlapping(self, other, distance=15):
         """
@@ -97,7 +96,7 @@ def _check_bam_files(bam_file):
     """
 
     if not os.path.exists(bam_file):
-        raise InputException("Can't open " + bam_file)
+        raise InputException(f"Can't open {bam_file}")
 
     samfile = pysam.AlignmentFile(bam_file, "rb")
     if not samfile.has_index():
@@ -114,9 +113,7 @@ def main():
     else:
         path_to_dir = os.path.join(args.out_dir, "test")
         if not _validate_path(path_to_dir):
-            print(
-                f"Problem with writing permissions in output directory. {path_to_dir}", file=sys.stderr)
-            exit(1)
+            sys.exit(f"Problem with writing permissions in output directory. {path_to_dir}\n")
     args.out_dir = os.path.abspath(args.out_dir)
 
     # Set up logging
@@ -139,20 +136,35 @@ def main():
         os.mkdir(vcf_dir)
 
     dust = {}
-    for chrom in pysam.AlignmentFile(args.bam, "rb").references:
-        logging.info(f"-- Start processing chromosome: {chrom} --")
-
-        insertions = extract_insertions(args.bam, chrom, minlen=15,
-                                        mapq=10, merge_distance=args.distance)
+    if args.region:
+        insertions = extract_insertions(args.bam, args.region, minlen=15,
+                                        mapq=10, merge_distance=args.distance, flank_distance=50)
         insertions = merge_overlapping_insertions(sorted(insertions), merge_distance=args.distance)
 
-        ins_chr_file = os.path.join(ins_dir, f"ins_{chrom}.fa")
+        ins_chr_file = os.path.join(ins_dir, "ins_region.fa")
         write_ins_file(insertions, ins_chr_file)
 
         mreps_dict = parse_mreps_result(run_mreps(ins_chr_file, args.mreps_res))
         dust.update(mreps_dict)
         if not args.save_temp:
             os.remove(ins_chr_file)
+    else:
+        for chrom in pysam.AlignmentFile(args.bam, "rb").references:
+            logging.info(f"-- Start processing chromosome: {chrom} --")
+
+            insertions = extract_insertions(args.bam, chrom, minlen=15,
+                                            mapq=10, merge_distance=args.distance,
+                                            flank_distance=50)
+            insertions = merge_overlapping_insertions(
+                sorted(insertions), merge_distance=args.distance)
+
+            ins_chr_file = os.path.join(ins_dir, f"ins_{chrom}.fa")
+            write_ins_file(insertions, ins_chr_file)
+
+            mreps_dict = parse_mreps_result(run_mreps(ins_chr_file, args.mreps_res))
+            dust.update(mreps_dict)
+            if not args.save_temp:
+                os.remove(ins_chr_file)
 
     # TODO merge vcf files geneated for each chromosome (usefull for parallel implementation)
 
@@ -168,7 +180,7 @@ def main():
     logging.info("Enjoy your annotation.")
 
 
-def extract_insertions(bamf, chrom, minlen, mapq, merge_distance):
+def extract_insertions(bamf, chrom, minlen, mapq, merge_distance, flank_distance):
     """
     Extract insertions and softclips from a bam file based on parsing CIGAR strings
 
@@ -192,7 +204,7 @@ def extract_insertions(bamf, chrom, minlen, mapq, merge_distance):
 
     insertions = []
     bam = pysam.AlignmentFile(bamf, "rb")
-    for read in bam.fetch(contig=chrom, multiple_iterators=True):
+    for read in bam.fetch(region=chrom, multiple_iterators=True):
         insertions_per_read = []
         read_position = 0
         reference_position = read.reference_start + 1
@@ -210,7 +222,7 @@ def extract_insertions(bamf, chrom, minlen, mapq, merge_distance):
                                       start=reference_position,
                                       length=length,
                                       haplotype=get_haplotype(read),
-                                      seq=read.query_sequence[read_position:read_position + length])
+                                      seq=read.query_sequence[read_position - flank_distance:read_position + length + flank_distance])
                         )
                     read_position += length
 
@@ -268,7 +280,7 @@ def merge_overlapping_insertions(insertions, merge_distance):
         to_merge.append(insertions[i])
 
         if (i == len(insertions) - 1) or (not insertions[i].is_overlapping(insertions[i + 1], distance=merge_distance)):
-            # logging.info(f"{i} {len(to_merge)}")
+            logging.debug(f"Merging {i} {len(to_merge)}")
             cons_ins = create_consensus(to_merge)
 
             if cons_ins is not None:
@@ -354,7 +366,8 @@ def parse_mreps_result(mreps_output_str):
     result_dict = {}
     mreps_output_str = re.split("Processing sequence", mreps_output_str)[1:]
     for output_str in mreps_output_str:
-        if "RESULTS: There are no repeats in the processed sequence" in output_str:
+        if "RESULTS: There are no repeats in the processed sequence" in output_str \
+                or 'Processed sequence is too short' in output_str:
             continue
         else:
             output_list = output_str.split('\n')
@@ -416,8 +429,8 @@ def vcfy(mrep_dict, oufvcf):
 def get_args():
     parser = ArgumentParser("Genotype STRs from long reads")
     parser.add_argument("bam", help="phased bam file")
-    parser.add_argument("out_dir", help="output directory",
-                        type=str)
+    parser.add_argument("-o", "--out_dir", help="output directory",
+                        type=str, default=os.getcwd())
     parser.add_argument("-d", "--distance",
                         help="distance across which two events should be merged",
                         type=int,
@@ -432,6 +445,7 @@ def get_args():
     parser.add_argument("--debug", action="store_true",
                         dest="debug", default=False,
                         help="enable debug output")
+    parser.add_argument("--region", help="run on a specific interval only")
 
     return parser.parse_args()
 
