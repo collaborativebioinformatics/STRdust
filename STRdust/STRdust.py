@@ -86,9 +86,6 @@ def main():
         mreps_dict = parse_mreps_result(run_mreps(args.ins_file, args.mreps_res))
         for key in mreps_dict.keys():
             dust[key] = mreps_dict[key]
-        # Group those insertions that are at approximately the same location and the same haplotype
-        # Create a consensus out of those by simple counting or local assembly
-        # Assess if an insertion is repetitive (mreps?) and extract the unit motif
 
     vcfy(dust, args.outfile)
 
