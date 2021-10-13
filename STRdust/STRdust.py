@@ -232,6 +232,17 @@ def create_consensus(insertions_to_merge, max_ins_length=7500):
 
 # REVIEW PARAMETERS
 def assemble(seqs):
+    """
+    Create a consensus of the inserted fragments
+
+    algorithm: 0 - local (Smith-Waterman) 1 - global (Needleman-Wunsch) 2 - semi-global
+    m: match score
+    n: score for mismatching bases
+    g: gap opening penalty
+    e: gap extension penalty
+    q: gap opening penalty of the second affine function
+    c: gap extension penalty of the second affine function
+    """
     consensus, _ = poa(seqs, algorithm=1, m=2, n=-4, g=-4, e=-2, q=-24, c=-1)
     return consensus
 
