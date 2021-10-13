@@ -22,7 +22,7 @@ Short tandem repeats (STRs) are motifs of multiple nucleotides in length that ar
 Although tools have been developed to address the high error-rate problem, they still have limitations such as not being able to consider multiple STRs in a single reads. To adress these issues, we present _STRdust_, a tool to (_de novo_) detect and genotype STRs in long-read sequencing data without prior genome annotation that can be applied in mammals and plants.
 
 ## How does it work?  
-![alt text](https://raw.githubusercontent.com/collaborativebioinformatics/STR_Integration/main/Flow%20chart%20group2.jpg)
+![alt text](https://raw.githubusercontent.com/collaborativebioinformatics/STRdust/main/Strategy1.png)
 
 ## How to use?  
 To run:  
@@ -47,6 +47,16 @@ optional arguments:
 
 ### Output  
   * vcf file with STR genotype calls  
+
+| #chrom | start | end | repeat_seq | size |
+| --------- | :-------: | :-----: | :------------: | -------: |
+| 22 | 10521893 |	10521909 |	GCA |	16 |
+| 22 |  10522628 |	10522647 |	AATA |	19 |
+| 22 |	10534566 |	10534586 |	GTTTT |	20 |
+| 22 |	10511934 |	10511957 |	AG |	23 |
+| 22 |	10516550 |	10516595 |	TA |	45 |
+| 22 |	10516550 |	10516572 |	TATATATG |	22 |
+
 
 ## Testing  
 This tool was tested using simulated reads for human chromosome 22 and tomato chromosome 1. Long reads were simulated from the GRCh38 (human) and SL4.0 (tomato) reference genome assemblies by first simulating two haplotypes for STRs and furtherthermore with SNPs. The simulated reads were then used to create a phased bam that was used as input for STRdust.   
