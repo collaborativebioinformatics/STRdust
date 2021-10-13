@@ -355,7 +355,7 @@ def parse_mreps_result(mreps_output_str):
     """
     Input: the output string from mreps
     Output: a dictionary that contains
-    key: chr22_start_end (the location of the insertion in chromosome)
+    key: chrN_start_end (the location of the insertion in chromosome)
     value:[[start, end, string], [start, end, string], ...]
         start is the start position of the repeat
         end is the end position of the repeat
@@ -378,7 +378,9 @@ def parse_mreps_result(mreps_output_str):
             for info in all_repeat_info:
                 info_list = info.split("\t")
                 loc_list = re.findall(r'\d+', info_list[0])
-                seq = info_list[-1].split()[0]
+                seq_list = info_list[-1].split()
+                seq = max(seq_list, key = seq_list.count)
+                # seq = info_list[-1].split()[0]
                 ins_info = loc_list + [seq]
                 temp.append(ins_info)
             result_dict.update({ins_loc: temp})
