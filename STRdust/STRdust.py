@@ -1,10 +1,39 @@
 from argparse import ArgumentParser
+
 from concurrent.futures import ProcessPoolExecutor
-import pysam, re, subprocess
+import pysam, re, subprocess, logging
 # from Bio import SeqIO
+
 from spoa import poa
 from itertools import groupby
 
+
+logger = logging.getLogger()
+
+
+def _enable_logging(log_file, debug, overwrite):
+    """
+    Turns on logging, sets debug levels and assigns a log file
+    """
+    log_formatter = logging.Formatter("[%(asctime)s] %(name)s: %(levelname)s: "
+                                      "%(message)s", "%Y-%m-%d %H:%M:%S")
+    console_formatter = logging.Formatter("[%(asctime)s] %(levelname)s: "
+                                          "%(message)s", "%Y-%m-%d %H:%M:%S")
+
+    console_log = logging.StreamHandler()
+    console_log.setFormatter(console_formatter)
+    if not debug:
+        console_log.setLevel(logging.INFO)
+
+    if overwrite:
+        open(log_file, "w").close()
+
+    file_handler = logging.FileHandler(log_file, mode="a")
+    file_handler.setFormatter(log_formatter)
+
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(console_log)
+    logger.addHandler(file_handler)
 
 
 class Insertion(object):
@@ -41,6 +70,11 @@ class Insertion(object):
 
 def main():
     args = get_args()
+
+    log_file = "STRdust.log"
+
+    _enable_logging(log_file, args.debug, overwrite=False)
+
     for chrom in pysam.AlignmentFile(args.bam, "rb").references:
         insertions = extract_insertions(args.bam, chrom, minlen=15,
                                         mapq=10, merge_distance=args.distance)
@@ -73,6 +107,9 @@ def extract_insertions(bamf, chrom, minlen, mapq, merge_distance):
     BAM_CDIFF   8
     BAM_CBACK   9
     """
+
+    logging.info("Start extraction of insertions and softclips")
+
     insertions = []
     bam = pysam.AlignmentFile(bamf, "rb")
     for read in bam.fetch(contig=chrom, multiple_iterators=True):
@@ -100,6 +137,8 @@ def extract_insertions(bamf, chrom, minlen, mapq, merge_distance):
         if len(insertions_per_read) > 1:
             insertions_per_read = horizontal_merge(insertions_per_read, merge_distance)
         insertions.extend(insertions_per_read)
+
+    logging.info("End with extraction of insertions and softclips.")
     return insertions
 
 
@@ -140,6 +179,8 @@ def horizontal_merge(insertions, merge_distance):
 
 
 def merge_overlapping_insertions(insertions, merge_distance):
+    logging.info("Start with merging overlapping insertions")
+
     merged_insertions = []
     for index, insertion in enumerate(insertions):
         to_merge = [insertion]
@@ -151,7 +192,9 @@ def merge_overlapping_insertions(insertions, merge_distance):
             else:
                 break
         merged_insertions.append(create_consensus(to_merge))
+    logging.info("End with merging overlapping insertions")
     return merged_insertions
+
 
 def create_consensus(insertions_to_merge):
     if len(insertions_to_merge) == 1:
@@ -235,6 +278,9 @@ def get_args():
                         help="tolerent error rate in mreps repeat finding",
                         type=int,
                         default=1)
+    parser.add_argument("--debug", action="store_true",
+                        dest="debug", default=False,
+                        help="enable debug output")
     return parser.parse_args()
 
 
