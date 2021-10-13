@@ -27,6 +27,9 @@ Although tools have been developed to address the high error-rate problem, they 
 ![alt text](https://raw.githubusercontent.com/collaborativebioinformatics/STR_Integration/main/Flow%20chart%20group2.jpg)
 
 ## How to use?
+`conda activate STRdust`  
+`python STRdust/STRdust.py <path_to_bamfile>`
+
 
 ## Quickstart
 
@@ -40,6 +43,11 @@ Although tools have been developed to address the high error-rate problem, they 
 
 ## Testing
 
-## Installation
+## Installation  
+Installation with conda environment:  
+1. `conda create --name STRdust -c bioconda python=3.7 pysam spoa pyspoa mreps`  
+2. `conda activate STRdust`  
+3. `python STRdust/STRdust.py`  
+
 
  
