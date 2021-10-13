@@ -93,7 +93,7 @@ python STRdust/STRDust.py test_data/subsampled.bam -o test_results
 
 
 ## Testing  
-This tool was tested using simulated reads for human chromosome 22 and tomato chromosome 1. Long reads were simulated using STRsimulator for the GRCh38 (human) and SL4.0 (tomato) reference genome assemblies. The simulator takes a haploid file as reference (.fasta) and a region file (.bed) containing information about known STR-regions as input. All of the supplied regions can be modified in  
+This tool was tested using simulated reads for human chromosome 22 and tomato chromosome 1. Long reads were simulated using SimiSTR for the GRCh38 (human) and SL4.0 (tomato) reference genome assemblies. The simulator takes a haploid file as reference (.fasta) and a region file (.bed) containing information about known STR-regions as input. All of the supplied regions can be modified in  
 ```
 expansion (% of regions that will randomly be positive or negative expanded [0.00-1.00]),
 mutation (% chance for a base to be substituted [0.00-1.00]),
