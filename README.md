@@ -44,16 +44,26 @@ To run:
 `python STRdust/STRdust.py path_to_bamfile`  
 
 ```
-usage: Genotype STRs from long reads [-h] [-d DISTANCE] bam
+usage: Genotype STRs from long reads [-h] [-o OUT_DIR] [-d DISTANCE]
+                                     [-r MREPS_RES] [--save_temp] [--debug]
+                                     [--region REGION]
+                                     bam
 
 positional arguments:
   bam                   phased bam file
 
 optional arguments:
   -h, --help            show this help message and exit
+  -o OUT_DIR, --out_dir OUT_DIR
+                        output directory (tool directory by default)
   -d DISTANCE, --distance DISTANCE
                         distance across which two events should be merged
- ```
+  -r MREPS_RES, --mreps_res MREPS_RES
+                        tolerent error rate in mreps repeat finding
+  --save_temp           enable saving temporary files in output directory
+  --debug               enable debug output
+  --region REGION       run on a specific interval only
+```
 
 ## Quickstart
 
