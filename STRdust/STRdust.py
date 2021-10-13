@@ -182,16 +182,15 @@ def merge_overlapping_insertions(insertions, merge_distance):
     logging.info("Start with merging overlapping insertions")
 
     merged_insertions = []
-    for index, insertion in enumerate(insertions):
-        to_merge = [insertion]
-        if insertion.merged:
-            continue
-        for candidate_merge in insertions[index+1:]:
-            if insertion.is_overlapping(candidate_merge, distance=merge_distance):
-                to_merge.append(candidate_merge)
-            else:
-                break
+    to_merge = []
+
+    for i in range(len(insertions)):
+    to_merge.append(insertions[i])
+
+    if (i == len(insertions) - 1) or (not insertions[i].is_overlapping(insertions[i + 1], distance=merge_distance)):
         merged_insertions.append(create_consensus(to_merge))
+        to_merge = []
+
     logging.info("End with merging overlapping insertions")
     return merged_insertions
 
@@ -209,7 +208,7 @@ def create_consensus(insertions_to_merge):
             haplotype=insertions_to_merge[0].haplotype,
             seq=consensus_seq)
         merged.count = count
-        
+
         return merged
 
 
