@@ -111,7 +111,4 @@ The simulator works on assembled genomes, as well as on only one or more assembl
 
 ### Simulation strategy
 STRsimulator was used to modify the GRCh38 (human) and SL4.0 (tomato) reference genome assemblies. Then, additional variation (SNVs) were introduced with SURVIVOR (https://github.com/fritzsedlazeck/SURVIVOR/) at a rate of 0.001. 
-Long reads were simulated using SURVIVOR for the GRCh38 (human) and SL4.0 (tomato) STR-modified genomes. Mapping was performed with minimap2 (https://github.com/lh3/minimap2) two-fold (with and without the `-Y` parameter), and phasing was done with longshot (https://github.com/pjedge/longshot). Default parameters were used for all tool, if not otherwise mentioned
-
-
-
+Long reads were simulated using SURVIVOR for the GRCh38 (human) and SL4.0 (tomato) STR-modified genomes. Mapping was performed with minimap2 (https://github.com/lh3/minimap2) two-fold (with and without the `-Y` parameter), and phasing was done with longshot (https://github.com/pjedge/longshot). Default parameters were used for all tools, if not otherwise mentioned.
