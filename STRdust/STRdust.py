@@ -3,11 +3,11 @@ from argparse import ArgumentParser
 
 import sys
 import os
+
+import shutil
 from concurrent.futures import ProcessPoolExecutor
-import pysam
-import re
-import subprocess
-import logging
+import pysam, re, subprocess, logging
+# from Bio import SeqIO
 
 from spoa import poa
 from itertools import groupby
@@ -39,10 +39,6 @@ def _enable_logging(log_file, debug, overwrite):
 
     if not debug:
         console_log.setLevel(logging.INFO)
-
-    path_to_dir = os.path.join(os.path.dirname(os.path.abspath(log_file)), "test")
-    if not _validate_path(path_to_dir):
-        raise InputException
 
     if overwrite:
         open(log_file, "w").close()
@@ -90,7 +86,7 @@ class Insertion(object):
         return all(condition)
 
 
-def _check_input_files(bam_file):
+def _check_bam_files(bam_file):
     """
     Check existance of input files and generate index file if it is absent
     :param bam_file: phased bam file with/without bai file
@@ -108,32 +104,69 @@ def _check_input_files(bam_file):
 def main():
     args = get_args()
 
-    try:
-        log_file = "STRdust.log"
-        _enable_logging(log_file, args.debug, overwrite=True)
-    except InputException:
-        print("Problem with creating logging file. Please, check writing permisson", file=sys.stderr)
+    # Creating output directory
+    if not os.path.isdir(args.out_dir):
+        os.mkdir(args.out_dir)
+    else:
+        path_to_dir = os.path.join(args.out_dir, "test")
+        if not _validate_path(path_to_dir):
+            print(f"Problem with writing permissions in output directory. {path_to_dir}", file=sys.stderr)
+            exit(1)
+    args.out_dir = os.path.abspath(args.out_dir)
 
+    # Set up logging
+    log_file = os.path.join(args.out_dir, "STRdust.log")
+    _enable_logging(log_file, args.debug, overwrite=True)
+
+    # Check input files
     try:
-        _check_input_files(args.bam)
+        _check_bam_files(args.bam)
     except InputException as err:
         logger.error(f"Problem with input files: {err}")
 
+    # Set up temporary directories
+    ins_dir = os.path.join(args.out_dir, "chrs_ins_tmp")
+    if not os.path.isdir(ins_dir):
+        os.mkdir(ins_dir)
+
+    vcf_dir = os.path.join(args.out_dir, "chrs_vcf_tmp") # TODO for parallel implementation
+    if not os.path.isdir(vcf_dir):
+        os.mkdir(vcf_dir)
+
     dust = {}
     for chrom in pysam.AlignmentFile(args.bam, "rb").references:
+        logging.info(f"-- Start processing chromosome: {chrom} --")
+
         insertions = extract_insertions(args.bam, chrom, minlen=15,
                                         mapq=10, merge_distance=args.distance)
         insertions = merge_overlapping_insertions(sorted(insertions), merge_distance=args.distance)
-        get_merged_ins_file(insertions, args.ins_file)
-        mreps_dict = parse_mreps_result(run_mreps(args.ins_file, args.mreps_res))
+
+        ins_chr_file = os.path.join(ins_dir, f"ins_{chrom}.fa")
+        write_ins_file(insertions, ins_chr_file)
+
+        mreps_dict = parse_mreps_result(run_mreps(ins_chr_file, args.mreps_res))
         for key in mreps_dict.keys():
             dust[key] = mreps_dict[key]
+
+        if not args.save_temp:
+            os.remove(ins_chr_file)
+
         # Group those insertions that are at approximately the same location and the same haplotype
         # Create a consensus out of those by simple counting or local assembly
         # Assess if an insertion is repetitive (mreps?) and extract the unit motif
 
-    vcfy(dust, args.outfile)
+    # TODO merge vcf files geneated for each chromosome (usefull for parallel implementation)
 
+    vcf_final_file = os.path.join(args.out_dir, "strdust-list.vcf")
+    vcfy(dust, vcf_final_file)
+
+    # clean up
+    if not args.save_temp:
+        logging.info("Cleaning up output directory.")
+        shutil.rmtree(ins_dir)
+        shutil.rmtree(vcf_dir)
+
+    logging.info("Enjoy your annotation.")
 
 def extract_insertions(bamf, chrom, minlen, mapq, merge_distance):
     """
@@ -234,8 +267,7 @@ def merge_overlapping_insertions(insertions, merge_distance):
     for i in range(len(insertions)):
         to_merge.append(insertions[i])
 
-        if (i == len(insertions) - 1) \
-                or (not insertions[i].is_overlapping(insertions[i + 1], distance=merge_distance)):
+        if (i == len(insertions) - 1) or (not insertions[i].is_overlapping(insertions[i + 1], distance=merge_distance)):
             # logging.info(f"{i} {len(to_merge)}")
             cons_ins = create_consensus(to_merge)
 
@@ -280,8 +312,7 @@ def assemble(seqs):
     consensus, _ = poa(seqs, algorithm=1, m=2, n=-4, g=-4, e=-2, q=-24, c=-1)
     return consensus
 
-
-def get_merged_ins_file(insertions, file_name):
+def write_ins_file(insertions, file_name):
     """
     Output an fasta file contains all insertions for mreps
     """
@@ -289,12 +320,9 @@ def get_merged_ins_file(insertions, file_name):
         for i in insertions:
             ins_file.writelines(f">{i.chrom}_{int(i.start)}_{int(i.end)}\n{i.seq}\n")
 
-
 def run_mreps(file_name, mreps_res):
-    mreps_result = subprocess.run(
-        ["mreps", "-fasta", "-res", str(mreps_res), file_name], capture_output=True)
+    mreps_result = subprocess.run(["mreps", "-fasta", "-res", str(mreps_res), file_name], capture_output=True)
     return(mreps_result.stdout.decode("utf-8"))
-
 
 def parse_mreps_result(mreps_output_str):
     """
@@ -306,28 +334,26 @@ def parse_mreps_result(mreps_output_str):
         end is the end position of the repeat
         string is the repeat string
     """
-    mreps_split_str = ' ' + '-'*93
+    mreps_split_str = ' ---------------------------------------------------------------------------------------------'
 
     result_dict = {}
     mreps_output_str = re.split("Processing sequence", mreps_output_str)[1:]
-    for output_str in mreps_output_str:
+    for output_str in  mreps_output_str:
         if "RESULTS: There are no repeats in the processed sequence" in output_str:
             continue
         else:
             output_list = output_str.split('\n')
             ins_loc = output_list[0]
             temp = []
-            all_repeat_info = [list(g) for k, g in groupby(
-                output_list, key=lambda x: x != mreps_split_str) if k][1]
+            all_repeat_info = [list(g) for k, g in groupby(output_list, key=lambda x: x != mreps_split_str) if k][1]
             for info in all_repeat_info:
                 info_list = info.split("\t")
                 loc_list = re.findall(r'\d+', info_list[0])
                 seq = info_list[-1].split()[0]
                 ins_info = loc_list + [seq]
                 temp.append(ins_info)
-            result_dict.update({ins_loc: temp})
+            result_dict.update({ins_loc:temp})
     return result_dict
-
 
 def vcfy(mrep_dict, oufvcf):
     """
@@ -354,24 +380,14 @@ def vcfy(mrep_dict, oufvcf):
                 end_mrep = int(end_mrep)
                 # skip homopolymers
                 if len(seq) > 1:
-                    strdust_vcf.write(
-                        "%s\t%s\t%s\t%s\t%s\n" % (chrom,
-                                                  str(start_mrep+start_ins),
-                                                  str(end_mrep+start_ins),
-                                                  seq,
-                                                  str(end_mrep-start_mrep)))
+                    strdust_vcf.write("%s\t%s\t%s\t%s\t%s\n" % (chrom, str(start_mrep+start_ins), str(end_mrep+start_ins), seq, str(end_mrep-start_mrep)))
         else:
             [[start_mrep, end_mrep, seq]] = mrep_dict[dustspec]
             start_mrep = int(start_mrep)
             end_mrep = int(end_mrep)
             # skip homopolymers
             if len(seq) > 1:
-                strdust_vcf.write(
-                    "%s\t%s\t%s\t%s\t%s\n" % (chrom,
-                                              str(start_mrep+start_ins),
-                                              str(end_mrep+start_ins),
-                                              seq,
-                                              str(end_mrep-start_mrep)))
+                strdust_vcf.write("%s\t%s\t%s\t%s\t%s\n" % (chrom, str(start_mrep+start_ins), str(end_mrep+start_ins), seq, str(end_mrep-start_mrep)))
 
     strdust_vcf.close()
 
@@ -379,25 +395,23 @@ def vcfy(mrep_dict, oufvcf):
 def get_args():
     parser = ArgumentParser("Genotype STRs from long reads")
     parser.add_argument("bam", help="phased bam file")
+    parser.add_argument("-o", "--out_dir", help="output directory",
+                        type=str)
     parser.add_argument("-d", "--distance",
                         help="distance across which two events should be merged",
                         type=int,
                         default=50)
-    parser.add_argument("-f", "--ins_file",
-                        help="location of merged insertion consensus fasta file",
-                        type=str,
-                        default="./ins.fa")
     parser.add_argument("-r", "--mreps_res",
                         help="tolerent error rate in mreps repeat finding",
                         type=int,
                         default=1)
-    parser.add_argument("-o", "--outfile",
-                        help="name of the vcf output",
-                        type=str,
-                        default="strdust-list.vcf")
+    parser.add_argument("--save_temp", action="store_true",
+                        dest = "save_temp", default = False,
+                        help = "enable saving temporary files in output directory")
     parser.add_argument("--debug", action="store_true",
                         dest="debug", default=False,
                         help="enable debug output")
+
     return parser.parse_args()
 
 
