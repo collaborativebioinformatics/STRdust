@@ -412,7 +412,7 @@ def get_args():
     parser = ArgumentParser("Genotype STRs from long reads")
     parser.add_argument("bam", help="phased bam file")
     parser.add_argument("-o", "--out_dir", help="output directory",
-                        type=str)
+                        type=str, default=os. getcwd())
     parser.add_argument("-d", "--distance",
                         help="distance across which two events should be merged",
                         type=int,
