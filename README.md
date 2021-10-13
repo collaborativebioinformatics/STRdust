@@ -1,16 +1,13 @@
 ![alt text](https://raw.githubusercontent.com/collaborativebioinformatics/STRdust/main/STRdust-logo.jpg)  
 
 ## Contributors  
-  Anneri Lötter, Guangyi Chen and Susanne P. Pfeifer - Writers  
+  Anneri Lötter, Guangyi Chen and Susanne P. Pfeifer - writers  
   Luis Paulin - coding  
   Damaris Lattimer - coding  
-  Deepak Choubey  
-  Kyuil Cho - Sysadmin  
-  Kimberley Billingsley  
-  Pavel Avdeyev - coding, dataset generation  
-  Simone Cree  
-  Wouter De Coster - Team Lead  
-  Yilei Fu  
+  Kyuil Cho - sys. admin, coding   
+  Yilei Fu - coding   
+  Pavel Avdeyev - coding   
+  Wouter De Coster - Team Lead     
 
 ## Goals
 * To develop a tool to detect and genotype (in terms of length) STR in long reads (_de novo_) without the need of genome annotation beforehand
@@ -23,43 +20,6 @@ Although tools have been developed to address the high error-rate problem, they 
 
 ## How does it work?  
 ![alt text](https://raw.githubusercontent.com/collaborativebioinformatics/STRdust/main/STRdustFlowchart.png)
-
-## How to use?  
-To run:  
-`python STRdust/STRdust.py path_to_bamfile`  
-
-```
-usage: Genotype STRs from long reads [-h] [-d DISTANCE] bam
-
-positional arguments:
-  bam                   phased bam file
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -d DISTANCE, --distance DISTANCE
-                        distance across which two events should be merged
- ```
-
-## Quickstart
-
-### Input  
-  * Phased bam alignment file  
-
-### Output  
-  * vcf file with STR genotype calls  
-
-| #chrom | start | end | repeat_seq | size |
-| --------- | :-------: | :-----: | :------------: | -------: |
-| 22 | 10521893 |	10521909 |	GCA |	16 |
-| 22 |  10522628 |	10522647 |	AATA |	19 |
-| 22 |	10534566 |	10534586 |	GTTTT |	20 |
-| 22 |	10511934 |	10511957 |	AG |	23 |
-| 22 |	10516550 |	10516595 |	TA |	45 |
-| 22 |	10516550 |	10516572 |	TATATATG |	22 |
-
-
-## Testing  
-This tool was tested using simulated reads for human chromosome 22 and tomato chromosome 1. Long reads were simulated from the GRCh38 (human) and SL4.0 (tomato) reference genome assemblies by first simulating two haplotypes for STRs and furtherthermore with SNPs. The simulated reads were then used to create a phased bam that was used as input for STRdust.   
 
 ## Installation  
 Installation using a conda environment
@@ -78,6 +38,73 @@ Installation using a conda environment
 
 5. Dry run  
 `python STRdust/STRdust.py -h`  
+
+Installation using pip
+
+`pip install setup.py` 
+
+## How to use?  
+To run:  
+`python STRdust/STRdust.py path_to_bamfile`  
+
+```
+usage: Genotype STRs from long reads [-h] [-o OUT_DIR] [-d DISTANCE]
+                                     [-r MREPS_RES] [--save_temp] [--debug]
+                                     [--region REGION]
+                                     bam
+
+positional arguments:
+  bam                   phased bam file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -o OUT_DIR, --out_dir OUT_DIR
+                        output directory (tool directory by default)
+  -d DISTANCE, --distance DISTANCE
+                        distance across which two events should be merged
+  -r MREPS_RES, --mreps_res MREPS_RES
+                        tolerent error rate in mreps repeat finding
+  --save_temp           enable saving temporary files in output directory
+  --debug               enable debug output
+  --region REGION       run on a specific interval only
+```
+
+## Quickstart
+
+```
+cd STRdust
+python STRdust/STRDust.py test_data/subsampled.bam -o test_results 
+```
+
+### Input  
+  * Phased bam alignment file  
+
+### Output  
+  * a table with STR genotype calls (chromosome, start, end, repeat motif and repeat size)  
+
+| #chrom | start | end | repeat_seq | size |
+| --------- | :-------: | :-----: | :------------: | -------: |
+| 22 | 10521893 |	10521909 |	GCA |	16 |
+| 22 |  10522628 |	10522647 |	AATA |	19 |
+| 22 |	10534566 |	10534586 |	GTTTT |	20 |
+| 22 |	10511934 |	10511957 |	AG |	23 |
+| 22 |	10516550 |	10516595 |	TA |	45 |
+| 22 |	10516550 |	10516572 |	TATATATG |	22 |
+
+
+## Testing  
+This tool was tested using simulated reads for human chromosome 22 and tomato chromosome 1. Long reads were simulated using STRsimulator for the GRCh38 (human) and SL4.0 (tomato) reference genome assemblies. The simulator takes a haploid file as reference (.fasta) and a region file (.bed) containing information about known STR-regions as input. All of the supplied regions can be modified in  
+```
+expansion (% of regions that will randomly be positive or negative expanded [0.00-1.00]),
+mutation (% chance for a base to be substituted [0.00-1.00]),
+number of indels (X times less likely than chance for mutation to insert or delete a base [0.00-1.00]). Further can the simulation file (.fasta) be created as
+haploid [h] or
+diploid [d]. If diploid is chosen,
+    the percentage of regions that should get homozygous can be set [0.00-1.00].
+```
+
+The simulator works on assembled genomes, as well as on only one or more assembled chromosomes, if the bed-file contains such entrances likewise (anything else could run errorfree, but will not manipulate anything, as manipulations only occur in the known regions). The simulated reads were then used to create a phased bam that was used as input for STRdust.   
+
 
 
  
