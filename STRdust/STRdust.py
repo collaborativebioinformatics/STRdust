@@ -140,7 +140,7 @@ def main():
         logging.info(f"-- Start processing chromosome: {chrom} --")
 
         insertions = extract_insertions(args.bam, chrom, minlen=15,
-                                        mapq=10, merge_distance=args.distance)
+                                        mapq=10, merge_distance=args.distance, flank_distance=50)
         insertions = merge_overlapping_insertions(sorted(insertions), merge_distance=args.distance)
 
         ins_chr_file = os.path.join(ins_dir, f"ins_{chrom}.fa")
@@ -165,7 +165,7 @@ def main():
     logging.info("Enjoy your annotation.")
 
 
-def extract_insertions(bamf, chrom, minlen, mapq, merge_distance):
+def extract_insertions(bamf, chrom, minlen, mapq, merge_distance, flank_distance):
     """
     Extract insertions and softclips from a bam file based on parsing CIGAR strings
 
@@ -207,7 +207,7 @@ def extract_insertions(bamf, chrom, minlen, mapq, merge_distance):
                                       start=reference_position,
                                       length=length,
                                       haplotype=get_haplotype(read),
-                                      seq=read.query_sequence[read_position:read_position + length])
+                                      seq=read.query_sequence[read_position - flank_distance:read_position + length + flank_distance])
                         )
                     read_position += length
 
