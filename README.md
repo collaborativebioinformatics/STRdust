@@ -10,7 +10,7 @@
   Pavel Avdeyev - coding, dataset generation  
   Simone Cree  
   Wouter De Coster - Team Lead  
-  Yilei Fu - coding
+  Yilei Fu  
 
 ## Goals
 * To develop a tool to detect and genotype (in terms of length) STR in long reads (_de novo_) without the need of genome annotation beforehand
@@ -24,14 +24,26 @@ Although tools have been developed to address the high error-rate problem, they 
 ## How does it work?  
 ![alt text](https://raw.githubusercontent.com/collaborativebioinformatics/STR_Integration/main/Flow%20chart%20group2.jpg)
 
-## How to use?
-1. `conda activate STRdust`  
-2. `python STRdust/STRdust.py <path_to_bamfile>`  
+## How to use?  
+To run:  
+`python STRdust/STRdust.py path_to_bamfile`  
+
+```
+usage: Genotype STRs from long reads [-h] [-d DISTANCE] bam
+
+positional arguments:
+  bam                   phased bam file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d DISTANCE, --distance DISTANCE
+                        distance across which two events should be merged
+ ```
 
 ## Quickstart
 
 ### Input  
-  * Phased bam and bai file  
+  * Phased bam alignment file  
 
 ### Output  
   * vcf file with STR genotype calls  
@@ -40,10 +52,22 @@ Although tools have been developed to address the high error-rate problem, they 
 This tool was tested using simulated reads for human chromosome 22 and tomato chromosome 1. Long reads were simulated from the GRCh38 (human) and SL4.0 (tomato) reference genome assemblies by first simulating two haplotypes for STRs and furtherthermore with SNPs. The simulated reads were then used to create a phased bam that was used as input for STRdust.   
 
 ## Installation  
-Installation with conda environment:  
-1. `conda create --name STRdust -c bioconda python=3.7 pysam spoa pyspoa mreps`  
-2. `conda activate STRdust`  
-3. `python STRdust/STRdust.py`  
+Installation using a conda environment
+
+1. Clone git repository  
+`git clone https://github.com/collaborativebioinformatics/STRdust.git`  
+
+2. Change to git repository folder  
+`cd <repository-folder-path>`
+
+3. Install environment  
+`conda create --name STRdust -c bioconda python=3.7 pysam spoa pyspoa mreps`  
+
+4. Activate environment  
+`conda activate STRdust`  
+
+5. Dry run  
+`python STRdust/STRdust.py -h`  
 
 
  
