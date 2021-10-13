@@ -75,17 +75,20 @@ def main():
 
     _enable_logging(log_file, args.debug, overwrite=False)
 
+    dust = {}
     for chrom in pysam.AlignmentFile(args.bam, "rb").references:
         insertions = extract_insertions(args.bam, chrom, minlen=15,
                                         mapq=10, merge_distance=args.distance)
         insertions = merge_overlapping_insertions(sorted(insertions), merge_distance=args.distance)
         get_merged_ins_file(insertions, args.ins_file)
-        # print(run_mreps(args.ins_file, args.mreps_res))
-        parse_mreps_result(run_mreps(args.ins_file, args.mreps_res))
-
+        mreps_dict = parse_mreps_result(run_mreps(args.ins_file, args.mreps_res))
+        for key in mreps_dict.keys():
+            dust[key] = mreps_dict[key]
         # Group those insertions that are at approximately the same location and the same haplotype
         # Create a consensus out of those by simple counting or local assembly
         # Assess if an insertion is repetitive (mreps?) and extract the unit motif
+
+    vcfy(dust, args.outfile)
 
 
 def extract_insertions(bamf, chrom, minlen, mapq, merge_distance):
@@ -260,6 +263,41 @@ def parse_mreps_result(mreps_output_str):
             result_dict.update({ins_loc:temp})
     return result_dict
 
+def vcfy(mrep_dict, oufvcf):
+    """
+    Input: a dictionary that contains
+    key: chrN_start_end (the location of the insertion in chromosome)
+    value:[[start, end, string], [start, end, string], ...]
+        start is the start position of the repeat based on the ins.fa
+        end is the end position of the repeat based on the ins.fa
+        string is the repeat string
+    """
+    strdust_vcf = open(oufvcf, "w")
+    logging.info("Writing results to %s" % oufvcf)
+    strdust_vcf.write("#chrom\tstart\tend\trepeat_seq\tsize\n")
+
+    for dustspec in mrep_dict.keys():
+        [chrom, start_ins, end_ins] = dustspec.split("'")[1].split("_")
+        start_ins = int(start_ins)
+        end_ins = int(end_ins)
+        # mreps can find more than on repeated seq
+        if len(mrep_dict[dustspec]) > 1:
+            for eachstr in mrep_dict[dustspec]:
+                [start_mrep, end_mrep, seq] = eachstr
+                start_mrep = int(start_mrep)
+                end_mrep = int(end_mrep)
+                # skip homopolymers
+                if len(seq) > 1:
+                    strdust_vcf.write("%s\t%s\t%s\t%s\t%s\n" % (chrom, str(start_mrep+start_ins), str(end_mrep+start_ins), seq, str(end_ins-start_ins)))
+        else:
+            [[start_mrep, end_mrep, seq]] = mrep_dict[dustspec]
+            start_mrep = int(start_mrep)
+            end_mrep = int(end_mrep)
+            # skip homopolymers
+            if len(seq) > 1:
+                strdust_vcf.write("%s\t%s\t%s\t%s\t%s\n" % (chrom, str(start_mrep+start_ins), str(end_mrep+start_ins), seq, str(end_ins-start_ins)))
+                
+    strdust_vcf.close()
 
 
 def get_args():
@@ -277,6 +315,10 @@ def get_args():
                         help="tolerent error rate in mreps repeat finding",
                         type=int,
                         default=1)
+    parser.add_argument("-o", "--outfile",
+                        help="name of the vcf output",
+                        type=str,
+                        default="strdust-list.vcf")
     parser.add_argument("--debug", action="store_true",
                         dest="debug", default=False,
                         help="enable debug output")
