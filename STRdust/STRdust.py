@@ -1,6 +1,10 @@
 from argparse import ArgumentParser
-import pysam
+from concurrent.futures import ProcessPoolExecutor
+import pysam, re, subprocess
+# from Bio import SeqIO
 from spoa import poa
+from itertools import groupby
+
 
 
 class Insertion(object):
@@ -41,6 +45,10 @@ def main():
         insertions = extract_insertions(args.bam, chrom, minlen=15,
                                         mapq=10, merge_distance=args.distance)
         insertions = merge_overlapping_insertions(sorted(insertions), merge_distance=args.distance)
+        get_merged_ins_file(insertions, args.ins_file)
+        # print(run_mreps(args.ins_file, args.mreps_res))
+        parse_mreps_result(run_mreps(args.ins_file, args.mreps_res))
+
         # Group those insertions that are at approximately the same location and the same haplotype
         # Create a consensus out of those by simple counting or local assembly
         # Assess if an insertion is repetitive (mreps?) and extract the unit motif
@@ -143,7 +151,7 @@ def merge_overlapping_insertions(insertions, merge_distance):
             else:
                 break
         merged_insertions.append(create_consensus(to_merge))
-
+    return merged_insertions
 
 def create_consensus(insertions_to_merge):
     if len(insertions_to_merge) == 1:
@@ -158,6 +166,7 @@ def create_consensus(insertions_to_merge):
             haplotype=insertions_to_merge[0].haplotype,
             seq=consensus_seq)
         merged.count = count
+        
         return merged
 
 
@@ -165,6 +174,50 @@ def create_consensus(insertions_to_merge):
 def assemble(seqs):
     consensus, _ = poa(seqs, algorithm=1, m=2, n=-4, g=-4, e=-2, q=-24, c=-1)
     return consensus
+
+def get_merged_ins_file(insertions, file_name):
+    """
+    Output an fasta file contains all insertions for mreps
+    """
+    with open(file_name, "w") as ins_file:
+        for i in insertions:
+            ins_file.writelines(f">{i.chrom}_{int(i.start)}_{int(i.end)}\n{i.seq}\n")
+
+def run_mreps(file_name, mreps_res):
+    mreps_result = subprocess.run(["mreps", "-fasta", "-res", str(mreps_res), file_name], capture_output=True)
+    return(mreps_result.stdout.decode("utf-8"))
+
+def parse_mreps_result(mreps_output_str):
+    """
+    Input: the output string from mreps
+    Output: a dictionary that contains
+    key: chr22_start_end (the location of the insertion in chromosome)
+    value:[[start, end, string], [start, end, string], ...]
+        start is the start position of the repeat
+        end is the end position of the repeat
+        string is the repeat string
+    """
+    mreps_split_str = ' ---------------------------------------------------------------------------------------------'
+
+    result_dict = {}
+    mreps_output_str = re.split("Processing sequence", mreps_output_str)[1:]
+    for output_str in  mreps_output_str:
+        if "RESULTS: There are no repeats in the processed sequence" in output_str:
+            continue
+        else:
+            output_list = output_str.split('\n')
+            ins_loc = output_list[0]
+            temp = []
+            all_repeat_info = [list(g) for k, g in groupby(output_list, key=lambda x: x != mreps_split_str) if k][1]
+            for info in all_repeat_info:
+                info_list = info.split("\t")
+                loc_list = re.findall(r'\d+', info_list[0])
+                seq = info_list[-1].split()[0]
+                ins_info = loc_list + [seq]
+                temp.append(ins_info)
+            result_dict.update({ins_loc:temp})
+    return result_dict
+
 
 
 def get_args():
@@ -174,6 +227,14 @@ def get_args():
                         help="distance across which two events should be merged",
                         type=int,
                         default=50)
+    parser.add_argument("-f", "--ins_file",
+                        help="location of merged insertion consensus fasta file",
+                        type=str,
+                        default="./ins.fa")
+    parser.add_argument("-r", "--mreps_res",
+                        help="tolerent error rate in mreps repeat finding",
+                        type=int,
+                        default=1)
     return parser.parse_args()
 
 
