@@ -50,7 +50,7 @@ Although tools have been developed to address the high error-rate problem, they 
 STRdust includes some third-party software:
 * [SPOA](https://github.com/rvaser/spoa)
 * [mreps](http://mreps.univ-mlv.fr/)
-* [samtools](https://https://github.com/samtools/samtools)
+* [samtools](https://github.com/samtools/samtools)
 
 ## How to use?  
 
