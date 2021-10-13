@@ -16,10 +16,10 @@
 ## Introduction/Description
 Short tandem repeats (STRs) are motifs of multiple nucleotides in length that are repeated. Due to their repetitive nature, the are subject to high mutation rates and cause several genetic diseases including more than 40 neurological and developmental disorders. Using short-read sequencing data to identify and characterize STRs have been met with some shortcomings including biases introduced by use of PCR. Long-read sequencing can be used to identify their length more accurately than short reads as reads can span across the entire repeat region. Long-reads still have a high error rate.
 
-Although tools have been developed to address the high error-rate problem, they still have limitations such as not being able to consider multiple STRs in a single reads. To adress these issues, we present _STRdust_, a tool to (_de novo_) detect and genotype STRs in long-read sequencing data without prior genome annotation that can be applied in mammals and plants.
+Although tools have been developed to address the high error-rate problem, they still have limitations such as not being able to consider multiple STRs in a single reads. To address these issues, we present _STRdust_, a tool to (_de novo_) detect and genotype STRs in long-read sequencing data without prior genome annotation that can be applied in mammals and plants.
 
 ## How does it work?  
-![alt text](https://raw.githubusercontent.com/collaborativebioinformatics/STRdust/main/STRdustFlowchart.png)
+![alt text](https://raw.githubusercontent.com/collaborativebioinformatics/STRdust/main/STRdustFlowchart1.png)
 
 ## Installation  
 
@@ -103,7 +103,7 @@ python STRdust/STRDust.py test_data/subsampled.bam -o test_results
 ### Simulation-strategy
 This tool was tested using simulated reads for human chromosome 22 and tomato chromosome 1. 
 
-### STRsimulator
+### SimiSTR
 We made use of [SimiSTR](https://github.com/DamarisLa/SimiSTR/), which manipulates a reference file (genome, chromosome) in order to simulate STR.
 The simulator takes a haploid file as reference(.fasta) and a region file (.bed) containing information about known STR-regions as input. All of the supplied regions can be, expanded and mutated. The output result is a fasta file with the modified STRs, and can be haploid or diploid (homozygosity can be user defined).
 
