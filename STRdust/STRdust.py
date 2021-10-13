@@ -373,11 +373,8 @@ def parse_mreps_result(mreps_output_str):
             output_list = output_str.split('\n')
             ins_loc = output_list[0]
             temp = []
-            try:
-                all_repeat_info = [list(g) for k, g in groupby(
-                    output_list, key=lambda x: x != mreps_split_str) if k][1]
-            except IndexError:
-                sys.exit(output_list)
+            all_repeat_info = [list(g) for k, g in groupby(
+                output_list, key=lambda x: x != mreps_split_str) if k][1]
             for info in all_repeat_info:
                 info_list = info.split("\t")
                 loc_list = re.findall(r'\d+', info_list[0])
