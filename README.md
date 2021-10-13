@@ -4,12 +4,9 @@
   Anneri Lötter, Guangyi Chen and Susanne P. Pfeifer - Writers  
   Luis Paulin - coding  
   Damaris Lattimer - coding  
-  Deepak Choubey  
-  Kyuil Cho - Sysadmin  
-  Kimberley Billingsley  
+  Kyuil Cho - Sysadmin, coding   
   Pavel Avdeyev - coding, dataset generation  
-  Simone Cree  
-  Wouter De Coster - Team Lead  
+  Wouter De Coster - Team Lead, coding  
   Yilei Fu - coding  
 
 ## Goals
@@ -23,6 +20,24 @@ Although tools have been developed to address the high error-rate problem, they 
 
 ## How does it work?  
 ![alt text](https://raw.githubusercontent.com/collaborativebioinformatics/STRdust/main/STRdustFlowchart.png)
+
+## Installation  
+Installation using a conda environment
+
+1. Clone git repository  
+`git clone https://github.com/collaborativebioinformatics/STRdust.git`  
+
+2. Change to git repository folder  
+`cd <repository-folder-path>`
+
+3. Install environment  
+`conda create --name STRdust -c bioconda python=3.7 pysam spoa pyspoa mreps`  
+
+4. Activate environment  
+`conda activate STRdust`  
+
+5. Dry run  
+`python STRdust/STRdust.py -h`  
 
 ## How to use?  
 To run:  
@@ -46,7 +61,7 @@ optional arguments:
   * Phased bam alignment file  
 
 ### Output  
-  * vcf file with STR genotype calls  
+  * a table with STR genotype calls (chromosome, start, end, repeat motif and repeat size)  
 
 | #chrom | start | end | repeat_seq | size |
 | --------- | :-------: | :-----: | :------------: | -------: |
@@ -59,25 +74,18 @@ optional arguments:
 
 
 ## Testing  
-This tool was tested using simulated reads for human chromosome 22 and tomato chromosome 1. Long reads were simulated from the GRCh38 (human) and SL4.0 (tomato) reference genome assemblies by first simulating two haplotypes for STRs and furtherthermore with SNPs. The simulated reads were then used to create a phased bam that was used as input for STRdust.   
+This tool was tested using simulated reads for human chromosome 22 and tomato chromosome 1. Long reads were simulated using STRsimulator for the GRCh38 (human) and SL4.0 (tomato) reference genome assemblies. The simulator takes a haploid file as reference (.fasta) and a region file (.bed) containing information about known STR-regions as input. All of the supplied regions can be modified in  
+```
+expansion (% of regions that will randomly be positive or negative expanded [0.00-1.00]),
+mutation (% chance for a base to be substituted [0.00-1.00]),
+number of indels (X times less likely than chance for mutation to insert or delete a base [0.00-1.00]). Further can the simulation file (.fasta) be created as
+haploid [h] or
+diploid [d]. If diploid is chosen,
+    the percentage of regions that should get homozygous can be set [0.00-1.00].
+```
 
-## Installation  
-Installation using a conda environment
+The simulator works on assembled genomes, as well as on only one or more assembled chromosomes, if the bed-file contains such entrances likewise (anything else could run errorfree, but will not manipulate anything, as manipulations only occur in the known regions). The simulated reads were then used to create a phased bam that was used as input for STRdust.   
 
-1. Clone git repository  
-`git clone https://github.com/collaborativebioinformatics/STRdust.git`  
-
-2. Change to git repository folder  
-`cd <repository-folder-path>`
-
-3. Install environment  
-`conda create --name STRdust -c bioconda python=3.7 pysam spoa pyspoa mreps`  
-
-4. Activate environment  
-`conda activate STRdust`  
-
-5. Dry run  
-`python STRdust/STRdust.py -h`  
 
 
  
