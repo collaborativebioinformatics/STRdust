@@ -96,7 +96,7 @@ def _check_bam_files(bam_file):
     """
 
     if not os.path.exists(bam_file):
-        raise InputException("Can't open " + bam_file)
+        raise InputException(f"Can't open {bam_file}")
 
     samfile = pysam.AlignmentFile(bam_file, "rb")
     if not samfile.has_index():
@@ -366,7 +366,8 @@ def parse_mreps_result(mreps_output_str):
     result_dict = {}
     mreps_output_str = re.split("Processing sequence", mreps_output_str)[1:]
     for output_str in mreps_output_str:
-        if "RESULTS: There are no repeats in the processed sequence" in output_str:
+        if "RESULTS: There are no repeats in the processed sequence" in output_str \
+                or 'Processed sequence is too short' in output_str:
             continue
         else:
             output_list = output_str.split('\n')
