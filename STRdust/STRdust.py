@@ -191,19 +191,35 @@ def merge_overlapping_insertions(insertions, merge_distance):
         to_merge.append(insertions[i])
 
         if (i == len(insertions) - 1) or (not insertions[i].is_overlapping(insertions[i + 1], distance=merge_distance)):
-            merged_insertions.append(create_consensus(to_merge))
+            # logging.info(f"{i} {len(to_merge)}")
+            cons_ins = create_consensus(to_merge)
+
+            if cons_ins is not None:
+                merged_insertions.append(cons_ins)
+
             to_merge = []
 
     logging.info("End with merging overlapping insertions")
     return merged_insertions
 
 
-def create_consensus(insertions_to_merge):
+def create_consensus(insertions_to_merge, max_ins_length=7500):
+    logging.info(f"Start merging insertions {len(insertions_to_merge)}")
+
     if len(insertions_to_merge) == 1:
         return insertions_to_merge[0]
     else:
         count = len(insertions_to_merge)
+        # logging.info("Start assembling things.")
+
+        length_above_cutoff = [len(i.seq) > max_ins_length for i in insertions_to_merge]
+        if any(length_above_cutoff):
+            return None
+
+        # logging.info(f"Seq lengths: {[len(i.seq) for i in insertions_to_merge]}")
+
         consensus_seq = assemble([i.seq for i in insertions_to_merge])
+        # logging.info("End assembling things")
         merged = Insertion(
             chrom=insertions_to_merge[0].chrom,
             start=sum([i.start for i in insertions_to_merge]) / count,
