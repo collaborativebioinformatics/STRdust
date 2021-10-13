@@ -1,5 +1,8 @@
+import tempfile
 from argparse import ArgumentParser
 
+import sys
+import os
 from concurrent.futures import ProcessPoolExecutor
 import pysam, re, subprocess, logging
 # from Bio import SeqIO
@@ -9,6 +12,15 @@ from itertools import groupby
 
 
 logger = logging.getLogger()
+
+def _validate_path(path):
+    try:
+        os.makedirs(path, exist_ok=True)
+        temp_dir_path = tempfile.mkdtemp(dir=path)
+        os.rmdir(temp_dir_path)
+        return True
+    except OSError:
+        return False
 
 
 def _enable_logging(log_file, debug, overwrite):
@@ -22,8 +34,13 @@ def _enable_logging(log_file, debug, overwrite):
 
     console_log = logging.StreamHandler()
     console_log.setFormatter(console_formatter)
+
     if not debug:
         console_log.setLevel(logging.INFO)
+
+    path_to_dir = os.path.join(os.path.dirname(os.path.abspath(log_file)), "test")
+    if not _validate_path(path_to_dir):
+        raise InputException
 
     if overwrite:
         open(log_file, "w").close()
@@ -36,6 +53,10 @@ def _enable_logging(log_file, debug, overwrite):
     logger.addHandler(file_handler)
 
 
+class InputException(Exception):
+    pass
+
+
 class Insertion(object):
     def __init__(self, chrom, start, length, haplotype, seq):
         self.chrom = chrom
@@ -44,7 +65,6 @@ class Insertion(object):
         self.length = length
         self.haplotype = haplotype
         self.seq = seq
-        self.merged = False
         self.count = 1
 
     def __lt__(self, other):
@@ -68,12 +88,34 @@ class Insertion(object):
         return all(condition)
 
 
+def _check_input_files(bam_file):
+    """
+    Check existance of input files and generate index file if it is absent
+    :param bam_file: phased bam file with/without bai file
+    """
+
+    if not os.path.exists(bam_file):
+        raise InputException("Can't open " + bam_file)
+
+    samfile = pysam.AlignmentFile(bam_file, "rb")
+    if not samfile.has_index():
+        logging.info("Input bam file does not have index file (.bai). Generating now.")
+        pysam.index(bam_file)
+
+
 def main():
     args = get_args()
 
-    log_file = "STRdust.log"
+    try:
+        log_file = "STRdust.log"
+        _enable_logging(log_file, args.debug, overwrite=True)
+    except InputException:
+        print("Problem with creating logging file. Please, check writing permisson", file=sys.stderr)
 
-    _enable_logging(log_file, args.debug, overwrite=False)
+    try:
+        _check_input_files(args.bam)
+    except InputException as err:
+        logger.error(f"Problem with input files: {err}")
 
     dust = {}
     for chrom in pysam.AlignmentFile(args.bam, "rb").references:
@@ -204,13 +246,12 @@ def merge_overlapping_insertions(insertions, merge_distance):
 
 
 def create_consensus(insertions_to_merge, max_ins_length=7500):
-    logging.info(f"Start merging insertions {len(insertions_to_merge)}")
+    logging.debug(f"Start merging insertions {len(insertions_to_merge)}")
 
     if len(insertions_to_merge) == 1:
         return insertions_to_merge[0]
     else:
         count = len(insertions_to_merge)
-        # logging.info("Start assembling things.")
 
         length_above_cutoff = [len(i.seq) > max_ins_length for i in insertions_to_merge]
         if any(length_above_cutoff):
@@ -219,7 +260,7 @@ def create_consensus(insertions_to_merge, max_ins_length=7500):
         # logging.info(f"Seq lengths: {[len(i.seq) for i in insertions_to_merge]}")
 
         consensus_seq = assemble([i.seq for i in insertions_to_merge])
-        # logging.info("End assembling things")
+
         merged = Insertion(
             chrom=insertions_to_merge[0].chrom,
             start=sum([i.start for i in insertions_to_merge]) / count,
