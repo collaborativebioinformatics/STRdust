@@ -10,7 +10,6 @@ import pysam
 import re
 import subprocess
 import logging
-# from Bio import SeqIO
 
 from spoa import poa
 from itertools import groupby
@@ -114,9 +113,7 @@ def main():
     else:
         path_to_dir = os.path.join(args.out_dir, "test")
         if not _validate_path(path_to_dir):
-            print(
-                f"Problem with writing permissions in output directory. {path_to_dir}", file=sys.stderr)
-            exit(1)
+            sys.exit(f"Problem with writing permissions in output directory. {path_to_dir}\n")
     args.out_dir = os.path.abspath(args.out_dir)
 
     # Set up logging
