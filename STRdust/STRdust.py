@@ -446,6 +446,10 @@ def get_args():
                         dest="debug", default=False,
                         help="enable debug output")
     parser.add_argument("--region", help="run on a specific interval only")
+    parser.add_argument("-v", "--version",
+                        help="Print version and exit.",
+                        action="version",
+                        version=f'STRdust {__version__}')
 
     return parser.parse_args()
 
