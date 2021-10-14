@@ -353,8 +353,7 @@ def concatenate_output(temporary_files, output_file):
     """
     pd.concat([pd.read_csv(f, sep="\t") for f in temporary_files if os.path.isfile(f)],
               ignore_index=True) \
-        .sort_values(by=['chrom', 'start'],
-                     key=lambda col: col.astype(str).str.replace('chr', '').astype(int)) \
+        .sort_values(by=['chrom', 'start']) \
         .to_csv(output_file, sep="\t", index=False)
 
 
