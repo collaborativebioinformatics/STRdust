@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-
+import sys
 import os
 import shutil
 from concurrent.futures import ProcessPoolExecutor
@@ -64,7 +64,7 @@ def main():
     if args.region:
         temporary_files = [run(args, args.region)]
     else:
-        chromosomes = pysam.AlignmentFile(args.bam, "rb").references
+        chromosomes = [c for c in pysam.AlignmentFile(args.bam, "rb").references if '_' not in c]
         with ProcessPoolExecutor(max_workers=args.threads) as executor:
             temporary_files = [f for f in executor.map(run, repeat(args), chromosomes)]
 
@@ -316,7 +316,10 @@ def vcfy(mrep_dict, oufvcf):
     strdust_vcf.write("chrom\tstart\tend\trepeat_seq\tsize\n")
 
     for dustspec in mrep_dict.keys():
-        [chrom, start_ins, end_ins] = dustspec.split("'")[1].split("_")
+        try:
+            [chrom, start_ins, end_ins] = dustspec.split("'")[1].split("_")
+        except ValueError:
+            sys.exit(dustspec)
         start_ins = int(start_ins)
         end_ins = int(end_ins)
         # mreps can find more than on repeated seq
@@ -352,7 +355,7 @@ def concatenate_output(temporary_files, output_file):
               ignore_index=True) \
         .sort_values(by=['chrom', 'start'],
                      key=lambda col: col.astype(str).str.replace('chr', '').astype(int)) \
-        .to_csv(output_file, sep="\t")
+        .to_csv(output_file, sep="\t", index=False)
 
 
 def get_args():
